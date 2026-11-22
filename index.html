@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Critter Lab: 2025-26 backtest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#efe7d8;--surface:#fbf6ec;--ink:#221d16;--muted:#6f6556;--line:#dccfb8;--accent:#b4410e;--good:#15803d;--bad:#b91c1c;--warn:#a16207;--fav:#1d4ed8;--dog:#9a3412;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#17140f;--surface:#211d17;--ink:#f2ead9;--muted:#a89d8b;--line:#3b342a;--accent:#fb923c;--good:#4ade80;--bad:#f87171;--warn:#facc15;--fav:#60a5fa;--dog:#fb923c;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Barlow,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:14px 12px 60px}
+h1{font:700 26px "Barlow Condensed",sans-serif;margin:0}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 12px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.box summary{font:700 16px "Barlow Condensed",sans-serif;color:var(--ink);cursor:pointer}
+.box summary b{color:var(--accent)}
+.toggle{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.toggle button,.chip button,.btn{font:600 13px Barlow,sans-serif;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.sg{display:grid;grid-template-columns:7.2em 1fr 1fr;gap:4px 6px;align-items:center;font-size:12.5px;margin-top:6px}
+.sg.g1{grid-template-columns:7.2em 1fr}
+.sg select{width:100%;min-width:0;font:500 13px Barlow,sans-serif;padding:5px 4px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.sg select.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);font-weight:700}
+.sg .h{font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;letter-spacing:.04em}
+.sg .sh{grid-column:1/-1;font:700 12px Barlow,sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:8px}
+.saved{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.chip button{border:0;border-radius:0}
+.chip button+button{color:var(--muted);border-left:1px solid var(--line)}
+.bar2{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.bar2 input{flex:1;min-width:9em;font:500 15px Barlow,sans-serif;padding:7px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.btn.main{background:var(--accent);border-color:var(--accent);color:#fff}
+.lc{font-size:13px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.lc b{color:var(--ink)}
+.big{font:700 34px "Barlow Condensed",sans-serif;line-height:1;font-variant-numeric:tabular-nums}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.res .side{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.res .side h3{margin:0 0 4px;font:700 15px "Barlow Condensed",sans-serif}
+.meter{position:relative;height:12px;border-radius:6px;background:color-mix(in srgb,var(--muted) 18%,transparent);margin:8px 0 2px}
+.meter .ci{position:absolute;top:0;bottom:0;border-radius:6px;background:color-mix(in srgb,var(--fav) 35%,transparent)}
+.meter .pt{position:absolute;top:-3px;width:4px;height:18px;margin-left:-2px;border-radius:2px;background:var(--ink)}
+.meter .be{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--good)}
+.meter .half{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
+.verdict{margin-top:8px;padding:6px 9px;border-radius:8px;font-size:13px;font-weight:600}
+.verdict.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.verdict.maybe{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.verdict.no{background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:4px 4px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:12px}
+td.w{color:var(--good);font-weight:600} td.l{color:var(--bad)}
+.empty{color:var(--muted);text-align:center;padding:24px}
+textarea{width:100%;font:13px ui-monospace,Menlo,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px}
+@media (max-width:440px){.res{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Critter Lab</h1>
+  <div class="sub" id="sub">Loading 2025-26…</div>
+  <div id="scanwrap"></div>
+  <div id="out"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let D = null, PIL = [], TRL = [], CUT = [];
+const PRED = ["Fox", "Bobcat", "Wolf", "Mountain lion", "Tiger"], PREY = ["Rat", "Rabbit", "Goat", "Elk", "Bison"];
+const BE = 0.5238;                     // break-even against the spread at -110
+const store = {get: (k, d) => { try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch(e){ return d; } }, set: (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }};
+
+/* ---------- what a team snapshot can be filtered on (same meanings as the live board) ---------- */
+const pilIdx = p => PIL.indexOf(p);
+const steadyUp = t => PIL.filter((p, i) => t.pil[i] != null && t.st[i] != null && t.pil[i] > 0 && t.st[i] >= 0.5).length;
+const steadyDn = t => PIL.filter((p, i) => t.pil[i] != null && t.st[i] != null && t.pil[i] < 0 && t.st[i] <= 0.5).length;
+const PILOPT = [["Any"], ["Positive", (t, i) => t.pil[i] > 0], ["Negative", (t, i) => t.pil[i] < 0], ["Strong (+1 or more)", (t, i) => t.pil[i] >= 1], ["Weak (−1 or less)", (t, i) => t.pil[i] <= -1],
+                ["Steady positive", (t, i) => t.pil[i] > 0 && t.st[i] >= 0.5], ["Steady negative", (t, i) => t.pil[i] < 0 && t.st[i] <= 0.5],
+                ["Streaky (either sign)", (t, i) => t.st[i] != null && t.st[i] < 0.5 && t.pil[i] > 0 || t.st[i] > 0.5 && t.pil[i] < 0]];
+const TRAITOPT = [["Any"], ["Apex level", (t, i) => t.ta[i]], ["Above average", (t, i) => t.tp[i] >= 0.5], ["Below average", (t, i) => t.tp[i] != null && t.tp[i] < 0.5], ["Not apex", (t, i) => !t.ta[i]]];
+let SIDE = [];
+function buildFields(){
+  SIDE = [
+    ["role", "Critter", [["Any"], ["Predator", t => t.role === "predator"], ["Prey", t => t.role === "prey"], ["Blob", t => t.role === "blob"], ["Not prey", t => t.role !== "prey"], ["Not predator", t => t.role !== "predator"]]],
+    ["animal", "Animal", [["Any"], ...[...PRED, ...PREY].map(a => [a, t => t.sp === a])]],
+    ["size", "Critter size", [["Any"], ["3+ (Wolf / Goat or bigger)", t => t.size >= 3], ["4+", t => t.size >= 4], ["5", t => t.size >= 5], ["3 or less", t => t.size != null && t.size <= 3], ["2 or less", t => t.size != null && t.size <= 2]]],
+    ["ato", "A/TO", [["Any"], ["Over 1.0", t => t.ato > 1], ["Over 1.25", t => t.ato > 1.25], ["Over 1.5", t => t.ato > 1.5], ["Under 1.0", t => t.ato != null && t.ato < 1]]],
+    ...PIL.map(p => ["p_" + p, p, PILOPT.map(([l, fn]) => fn ? [l, t => t.pil[pilIdx(p)] != null && fn(t, pilIdx(p))] : [l])]),
+    ["sup", "Steady + pillars", [["Any"], ["2 or more", t => steadyUp(t) >= 2], ["3 or more", t => steadyUp(t) >= 3], ["4 of 4", t => steadyUp(t) >= 4], ["None", t => steadyUp(t) === 0]]],
+    ["sdn", "Steady − pillars", [["Any"], ["2 or more", t => steadyDn(t) >= 2], ["3 or more", t => steadyDn(t) >= 3], ["4 of 4", t => steadyDn(t) >= 4], ["None", t => steadyDn(t) === 0]]],
+    ["rank", "Predator rank", [["Any"], ["Top 25", t => t.rank <= 25], ["Top 50", t => t.rank <= 50], ["Top 100", t => t.rank <= 100], ["Outside top 100", t => t.rank > 100], ["Bottom 100", t => t.rank > t.of - 100]]],
+    ["acore", "Apex count", [["Any"], ["2 or more", t => t.acore >= 2], ["3 or more", t => t.acore >= 3], ["4 or more", t => t.acore >= 4], ["None", t => t.acore === 0]]],
+    ["shoot", "Shooting (eFG)", [["Any"], ["Hot (z +1 or more)", t => t.efg >= 1], ["Cold (z −1 or less)", t => t.efg != null && t.efg <= -1], ["Normal", t => t.efg != null && Math.abs(t.efg) < 1]]],
+    ["three", "Three-point luck", [["Any"], ["Cold: 6+ under its level", t => t.own3a >= 60 && t.own3 <= t.exp3 - 0.06], ["Hot: 6+ over its level", t => t.own3a >= 60 && t.own3 >= t.exp3 + 0.06]]],
+    ["dluck", "Defense luck", [["Any"], ["Lucky: opponents 6+ under", t => t.opp3a >= 60 && t.opp3 <= t.oexp3 - 0.06], ["Unlucky: opponents 6+ over", t => t.opp3a >= 60 && t.opp3 >= t.oexp3 + 0.06]]],
+    ["down", "Played down", [["Any"], ["Yes (1+ net)", t => t.down >= 1], ["No", t => !t.down]]],
+    ["games", "Games played", [["Any"], ["10+", t => t.g >= 10], ["15+", t => t.g >= 15], ["Under 10", t => t.g < 10]]],
+    ["rec", "Record", [["Any"], ["Winning", t => t.w * 2 > t.g], ["Losing", t => t.w * 2 < t.g]]],
+    ...TRL.map((l, i) => ["t" + i, l, TRAITOPT.map(([lab, fn]) => fn ? [lab, t => t.tp[i] != null && fn(t, i)] : [lab])]),
+  ];
+}
+const tierOf = g => PIL.filter((p, i) => g.F.pil[i] != null && g.U.pil[i] != null && g.F.pil[i] - g.U.pil[i] >= 0.5 && !(g.F.st[i] != null && g.F.st[i] < 0.5)).length;
+const dogEdges = g => PIL.filter((p, i) => g.F.pil[i] != null && g.U.pil[i] != null && g.U.pil[i] - g.F.pil[i] >= 0.5).length;
+const FLAGS = {
+  "Steadier dog": g => steadyUp(g.U) > steadyUp(g.F),
+  "Steadier dog by 2+": g => steadyUp(g.U) >= steadyUp(g.F) + 2,
+  "Dog wins the glass": g => g.U.pil[pilIdx("Glass")] - g.F.pil[pilIdx("Glass")] >= 1,
+  "Edge is mostly shooting": g => g.F.efg - g.U.efg >= 1 && tierOf(g) <= 1,
+  "System flip": g => g.U.pil.reduce((s, x) => s + (x || 0), 0) - g.F.pil.reduce((s, x) => s + (x || 0), 0) >= 1.5,
+  "Lucky defense (favorite)": g => g.F.opp3a >= 60 && g.F.opp3 <= g.F.oexp3 - 0.06,
+  "Cold dog": g => g.U.own3a >= 60 && g.U.own3 <= g.U.exp3 - 0.06,
+  "Favorite played down": g => g.F.down >= 1,
+};
+const GAME = [
+  ["spread", "Spread", [["Any"], ["Under 5", g => g.line < 5], ["5 to 10", g => g.line >= 5 && g.line < 10], ["Under 10", g => g.line < 10], ["10 to 20", g => g.line >= 10 && g.line < 20], ["20 or more", g => g.line >= 20]]],
+  ["site", "Site", [["Any"], ["Favorite at home", g => g.site === "home"], ["Favorite on the road", g => g.site === "away"], ["Neutral", g => g.site === "neutral"], ["Skip neutral", g => g.site !== "neutral"]]],
+  ["tier", "Pillar edges (fav)", [["Any"], ["0", g => tierOf(g) === 0], ["1 or more", g => tierOf(g) >= 1], ["2 or more", g => tierOf(g) >= 2], ["3 or more", g => tierOf(g) >= 3]]],
+  ["dedge", "Dog pillar edges", [["Any"], ["0", g => dogEdges(g) === 0], ["1 or more", g => dogEdges(g) >= 1], ["2 or more", g => dogEdges(g) >= 2]]],
+  ["flag", "Flag", [["Any"], ...Object.entries(FLAGS)]],
+  ["month", "Month", [["Any"], ["December", g => g.d.slice(5, 7) === "12"], ["January", g => g.d.slice(5, 7) === "01"], ["February", g => g.d.slice(5, 7) === "02"], ["March and April", g => ["03", "04"].includes(g.d.slice(5, 7))]]],
+];
+
+/* ---------- scan state ---------- */
+let SCAN = Object.assign({mode: "fd", a: {}, b: {}, g: {}}, store.get("labScanNow", {}));
+let SAVED = store.get("labScans", {});
+const count = sc => ["a", "b", "g"].reduce((n, s) => n + Object.values(sc[s] || {}).filter(Boolean).length, 0);
+const sides = g => SCAN.mode === "fd" ? [g.F, g.U] : (g.site === "home" ? [g.U, g.F] : [g.F, g.U]);   // [A, B]: fav/dog, or away/home
+const sideNames = () => SCAN.mode === "fd" ? ["Favorite", "Dog"] : ["Away", "Home"];
+function match(g){
+  if(SCAN.mode === "ha" && g.site === "neutral" && (count({a: SCAN.a, b: SCAN.b, g: {}}) > 0)) return false;   // no home team on a neutral floor
+  const [A, B] = sides(g);
+  for(const [side, t] of [["a", A], ["b", B]]) for(const [k, , o] of SIDE){ const i = (SCAN[side] || {})[k]; if(i && !o[i][1](t)) return false; }
+  for(const [k, , o] of GAME){ const i = (SCAN.g || {})[k]; if(i && !o[i][1](g)) return false; }
+  return true;
+}
+
+/* ---------- results ---------- */
+const phi = x => 0.5 * (1 + erf(x / Math.SQRT2));
+function erf(x){ const s = Math.sign(x); x = Math.abs(x); const t = 1 / (1 + 0.3275911 * x);
+  return s * (1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x)); }
+/* side A's numbers: favorite in fav/dog mode, away team in home/away mode */
+function aView(g){
+  const aIsFav = SCAN.mode === "fd" || g.site !== "home";
+  const margin = aIsFav ? g.m : -g.m, spread = aIsFav ? -g.line : g.line;       // spread from A's side: -7 = A favored by 7
+  return {mvl: margin + spread, won: margin > 0, p: phi(-spread / 11)};
+}
+const pc = x => (x * 100).toFixed(1) + "%";
+function sideBox(name, rs, flip, base){
+  const n = rs.length; if(!n) return "";
+  const cov = rs.filter(r => flip ? r.mvl < 0 : r.mvl > 0).length / n;
+  const by5 = rs.filter(r => flip ? r.mvl <= -5 : r.mvl >= 5).length / n, by10 = rs.filter(r => flip ? r.mvl <= -10 : r.mvl >= 10).length / n;
+  const won = rs.filter(r => flip ? !r.won : r.won).length / n, said = rs.reduce((s, r) => s + (flip ? 1 - r.p : r.p), 0) / n;
+  const half = 1.96 * Math.sqrt(0.25 / n), lo = cov - half, hi = cov + half;
+  const X = v => Math.max(0, Math.min(100, (v - 0.3) / 0.4 * 100));               // meter shows 30% to 70%
+  const verdict = n < 30 ? ["no", `Only ${n} games. Far too few to tell anything.`]
+    : lo > BE ? ["good", `Beats break-even even at the low end of the luck range. Worth testing on 2024-25.`]
+    : cov > BE ? ["maybe", `Above break-even, but inside the luck range (±${(half * 100).toFixed(1)}). Could be chance.`]
+    : ["no", `Below break-even (52.4%).`];
+  return `<div class="side"><h3>${name} covers</h3><div class="big">${pc(cov)}</div>
+    <div class="meter"><div class="ci" style="left:${X(lo)}%;width:${X(hi) - X(lo)}%"></div><div class="half" style="left:${X(0.5)}%"></div><div class="be" style="left:${X(BE)}%"></div><div class="pt" style="left:${X(cov)}%"></div></div>
+    <div class="lc">Luck range ${pc(lo)} to ${pc(hi)} · green line = break-even</div>
+    <div class="lc">All games, same side: <b>${pc(base)}</b> (${cov - base >= 0 ? "+" : ""}${((cov - base) * 100).toFixed(1)} from this scan)</div>
+    <div class="lc">Beats the spread by 5+: <b>${pc(by5)}</b> · by 10+: <b>${pc(by10)}</b></div>
+    <div class="lc">Won outright <b>${pc(won)}</b> vs spread said ${pc(said)} (moneyline check)</div>
+    <div class="verdict ${verdict[0]}">${verdict[1]}</div></div>`;
+}
+function draw(){
+  const gs = D.games.filter(match), n = gs.length, on = count(SCAN);
+  if(!on){ $("out").innerHTML = `<div class="box"><div class="lc">Set some filters to test a combination. With no filters, favorites covered <b>${pc(D.games.filter(g => g.m - g.line > 0).length / D.games.length)}</b> of ${D.games.length} games this season.</div></div>`; return; }
+  if(!n){ $("out").innerHTML = `<div class="box empty">No games match.</div>`; return; }
+  const rs = gs.map(aView), [an, bn] = sideNames();
+  const all = D.games.filter(g => SCAN.mode === "fd" || g.site !== "neutral").map(aView), baseA = all.filter(r => r.mvl > 0).length / all.length, baseB = all.filter(r => r.mvl < 0).length / all.length;
+  const months = [["Dec", "12"], ["Jan", "01"], ["Feb", "02"], ["Mar/Apr", "03|04"]].map(([l, m]) => {
+    const x = gs.filter(g => new RegExp(`^(${m})$`).test(g.d.slice(5, 7))).map(aView);
+    return `<td>${l}</td><td>${x.length}</td><td>${x.length ? pc(x.filter(r => r.mvl > 0).length / x.length) : "–"}</td>`; });
+  const list = gs.slice().sort((a, b) => a.d < b.d ? 1 : -1).slice(0, 150).map(g => { const r = aView(g);
+    const fav = D.names[g.f] || g.f, dog = D.names[g.u] || g.u;
+    return `<tr><td>${g.d.slice(5)}</td><td>${fav} <span style="color:var(--muted)">${g.F.sp}</span> −${g.line}<br>${g.site === "home" ? "vs" : g.site === "away" ? "at" : "vs (N)"} ${dog} <span style="color:var(--muted)">${g.U.sp}</span></td>
+      <td>${g.m > 0 ? "+" : ""}${g.m}</td><td class="${r.mvl > 0 ? "w" : r.mvl < 0 ? "l" : ""}">${r.mvl > 0 ? "A covers" : r.mvl < 0 ? "B covers" : "push"}</td></tr>`; }).join("");
+  $("out").innerHTML = `<div class="box"><div class="lc"><b>${n}</b> games match (${pc(n / D.games.length)} of the season). Side A = ${an}, side B = ${bn}.</div>
+      <div class="res" style="margin-top:8px">${sideBox("A · " + an, rs, false, baseA)}${sideBox("B · " + bn, rs, true, baseB)}</div>
+      <table style="margin-top:10px"><tr><th>Month</th><th>Games</th><th>A covers</th></tr>${months.map(m => `<tr>${m}</tr>`).join("")}</table>
+      <div class="lc">An edge that's real should show up in most months, not just one.</div></div>
+    <div class="box"><details><summary>Games (${Math.min(150, n)} most recent of ${n})</summary>
+      <table style="margin-top:8px"><tr><th>Date</th><th>Matchup (favorite first)</th><th>Fav margin</th><th>Result</th></tr>${list}</table></details></div>`;
+}
+
+/* ---------- scan panel ---------- */
+function panel(){
+  const [an, bn] = sideNames();
+  const sel = (side, k, o) => `<select data-sk="${side}.${k}" class="${(SCAN[side] || {})[k] ? "on" : ""}">${o.map(([l], i) => `<option value="${i}"${((SCAN[side] || {})[k] || 0) === i ? " selected" : ""}>${l}</option>`).join("")}</select>`;
+  const rows = fs => fs.map(([k, l, o]) => `<span>${l}</span>${sel("a", k, o)}${sel("b", k, o)}`).join("");
+  const n = count(SCAN), main = SIDE.filter(f => !/^t\d/.test(f[0])), tr = SIDE.filter(f => /^t\d/.test(f[0]));
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+  return `<details class="box" id="scanbox"${SCAN.open !== false ? " open" : ""}><summary>Scan${n ? ` · <b>${n} filter${n > 1 ? "s" : ""}</b>` : ""}${SCAN.name ? ` · "${esc(SCAN.name)}"` : ""}</summary>
+    ${Object.keys(SAVED).length ? `<div class="saved">${Object.keys(SAVED).sort().map(s => `<span class="chip"><button data-load="${esc(s)}">${esc(s)}</button><button data-del="${esc(s)}" aria-label="Delete ${esc(s)}">×</button></span>`).join("")}</div>` : ""}
+    <div class="toggle"><button data-mode="fd" aria-pressed="${SCAN.mode === "fd"}">Favorite / Dog</button><button data-mode="ha" aria-pressed="${SCAN.mode === "ha"}">Away / Home</button></div>
+    <div class="sg"><span></span><span class="h">A · ${an}</span><span class="h">B · ${bn}</span>${rows(main)}<span class="sh">Apex traits</span>${rows(tr)}</div>
+    <div class="sg g1"><span class="sh">Game</span>${GAME.map(([k, l, o]) => `<span>${l}</span>${sel("g", k, o)}`).join("")}</div>
+    <div class="bar2"><input id="nm" placeholder="Name this scan" maxlength="40"><button class="btn" data-save="1">Save</button><button class="btn main" data-copy="1">Copy for 2024-25 test</button><button class="btn" data-clear="1">Clear</button></div>
+    <div id="copyout"></div></details>`;
+}
+function describe(){
+  const [an, bn] = sideNames(), part = (side, label) => SIDE.filter(([k]) => (SCAN[side] || {})[k]).map(([k, l, o]) => `${l} = ${o[SCAN[side][k]][0]}`);
+  const a = part("a"), b = part("b"), g = GAME.filter(([k]) => (SCAN.g || {})[k]).map(([k, l, o]) => `${l} = ${o[SCAN.g[k]][0]}`);
+  const rs = D.games.filter(match).map(aView), n = rs.length, cov = n ? rs.filter(r => r.mvl > 0).length / n : 0;
+  return `Critter Lab scan${SCAN.name ? ` "${SCAN.name}"` : ""} (mode: ${an} / ${bn})\n` +
+    (a.length ? `${an}: ${a.join("; ")}\n` : "") + (b.length ? `${bn}: ${b.join("; ")}\n` : "") + (g.length ? `Game: ${g.join("; ")}\n` : "") +
+    `2025-26 result: ${n} games, ${an} covers ${pc(cov)} (${bn} ${pc(1 - cov)}).\nPlease test this on 2024-25.`;
+}
+function wire(){
+  $("scanwrap").innerHTML = panel();
+  const box = $("scanbox"); box.ontoggle = () => { SCAN.open = box.open; store.set("labScanNow", SCAN); };
+  box.querySelectorAll("select").forEach(el => el.onchange = () => {
+    const [side, k] = el.dataset.sk.split("."); SCAN[side] = SCAN[side] || {};
+    if(+el.value) SCAN[side][k] = +el.value; else delete SCAN[side][k];
+    delete SCAN.name; el.classList.toggle("on", +el.value > 0); store.set("labScanNow", SCAN);
+    const sm = box.querySelector("summary"), n = count(SCAN); sm.innerHTML = `Scan${n ? ` · <b>${n} filter${n > 1 ? "s" : ""}</b>` : ""}`; draw(); });
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-mode],[data-load],[data-del],[data-save],[data-copy],[data-clear]"); if(!b) return;
+  if(b.dataset.mode){ SCAN.mode = b.dataset.mode; delete SCAN.name; }
+  else if(b.dataset.load){ SCAN = Object.assign(JSON.parse(JSON.stringify(SAVED[b.dataset.load])), {open: true, name: b.dataset.load}); }
+  else if(b.dataset.del){ delete SAVED[b.dataset.del]; store.set("labScans", SAVED); }
+  else if(b.dataset.save){ const nm = $("nm").value.trim(); if(!nm || !count(SCAN)){ $("nm").placeholder = count(SCAN) ? "Type a name first" : "Set a filter first"; return; }
+    SAVED[nm] = {mode: SCAN.mode, a: SCAN.a, b: SCAN.b, g: SCAN.g}; SCAN.name = nm; store.set("labScans", SAVED); }
+  else if(b.dataset.copy){ if(!count(SCAN)) return; const txt = describe();
+    const done = () => { $("copyout").innerHTML = `<div class="lc">Copied. Paste it into the chat. If it didn't copy, select the text below.</div><textarea rows="6" readonly>${txt.replace(/</g, "&lt;")}</textarea>`; };
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(done, done); return; }
+  else if(b.dataset.clear){ SCAN = {mode: SCAN.mode, a: {}, b: {}, g: {}, open: true}; }
+  store.set("labScanNow", SCAN); wire(); draw();
+});
+
+/* ---------- load ---------- */
+fetch("lab_2025-26.json?t=" + Date.now()).then(r => r.json()).then(d => {
+  D = d; PIL = d.pillars; TRL = d.traits; CUT = d.apex_cut; buildFields();
+  $("sub").innerHTML = `${d.season} season, Dec to April: <b>${d.games.length}</b> games with closing spreads. Ratings are rebuilt as of each game day from earlier games only. No injury data. 2024-25 is held out for testing.`;
+  wire(); draw();
+}).catch(e => { $("sub").textContent = "Couldn't load the Lab data file (lab_2025-26.json). Check that it was uploaded next to index.html."; });
+</script>
+</body>
+</html>
