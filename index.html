@@ -113,7 +113,7 @@ const FLAGS = {
   "Favorite played down": g => g.F.down >= 1,
 };
 const GAME = [
-  ["spread", "Spread", [["Any"], ["Under 5", g => g.line < 5], ["5 to 10", g => g.line >= 5 && g.line < 10], ["Under 10", g => g.line < 10], ["10 to 20", g => g.line >= 10 && g.line < 20], ["20 or more", g => g.line >= 20]]],
+  ["spread", "Spread", [["Any"], ["Under 5", g => g.line < 5], ["5 to 10", g => g.line >= 5 && g.line < 10], ["Under 10", g => g.line < 10], ["10 to 20", g => g.line >= 10 && g.line < 20], ["20 or more", g => g.line >= 20], ["5 to 15", g => g.line >= 5 && g.line < 15], ["5 to 20", g => g.line >= 5 && g.line < 20]]],
   ["site", "Site", [["Any"], ["Favorite at home", g => g.site === "home"], ["Favorite on the road", g => g.site === "away"], ["Neutral", g => g.site === "neutral"], ["Skip neutral", g => g.site !== "neutral"]]],
   ["tier", "Pillar edges (fav)", [["Any"], ["0", g => tierOf(g) === 0], ["1 or more", g => tierOf(g) >= 1], ["2 or more", g => tierOf(g) >= 2], ["3 or more", g => tierOf(g) >= 3]]],
   ["dedge", "Dog pillar edges", [["Any"], ["0", g => dogEdges(g) === 0], ["1 or more", g => dogEdges(g) >= 1], ["2 or more", g => dogEdges(g) >= 2]]],
