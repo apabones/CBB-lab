@@ -67,7 +67,8 @@ def snap(T, crit, apx, tid):
                 tp=[R((tr.get(k) or {}).get("pct"), 3) for k in TR], ta=[bool((tr.get(k) or {}).get("apex")) for k in TR],
                 own3=R(r.get("own3"), 3), own3a=None if pd.isna(r.get("own3a")) else int(r.own3a), opp3=R(r.get("opp3"), 3),
                 opp3a=None if pd.isna(r.get("opp3a")) else int(r.opp3a), exp3=R(r.get("exp3"), 3), oexp3=R(r.get("opp_exp3"), 3),
-                down=(c.get("hunt") or {}).get("net"), mg=R(r.margin, 1))
+                down=(c.get("hunt") or {}).get("net"), mg=R(r.margin, 1),
+                orb=R(r.get("ORBTV per 100"), 1), porb=R(r.get("porb"), 3), p3=R(r.get("p3"), 3), p3a=R(r.get("p3a"), 3), tpg=R(r.get("3pg"), 1))
 
 
 pool_state, games, dates = {}, [], sorted(L.date.unique())

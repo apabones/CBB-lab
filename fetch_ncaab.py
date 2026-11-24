@@ -288,6 +288,11 @@ def team_table(G, meta):
     T["own3"], T["own3a"] = (t3._3m / t3._3a.where(t3._3a > 0)).round(3), t3._3a
     T["opp3"], T["opp3a"] = (t3._o3m / t3._o3a.where(t3._o3a > 0)).round(3), t3._o3a
     POOL["lg3"] = round(float(G._3m.sum() / max(1, G._3a.sum())), 3)
+    # percentiles for the scanner: 3P%, threes tried per game, and ORBTV (extra possessions), each against the scored pool
+    pl = T.games >= POOL["min"]
+    T["3pg"] = (T.own3a / T.games.where(T.games > 0)).round(1)
+    for c, k in [("own3", "p3"), ("3pg", "p3a"), ("ORBTV per 100", "porb")]:
+        T[k] = pct_vs(T.loc[pl, c], T[c]).round(3)
     T["eFG z"] = Z["eFG"].round(2)
     T["eFG move"] = (Z5["eFG"] - Z["eFG"]).round(2)
     T = T.join(meta)
@@ -1145,6 +1150,7 @@ def main():
                               own3=f(r.get("own3"), 3), own3a=None if pd.isna(r.get("own3a")) else int(r["own3a"]),
                               opp3=f(r.get("opp3"), 3), opp3a=None if pd.isna(r.get("opp3a")) else int(r["opp3a"]),
                               exp3=f(r.get("exp3"), 3), opp_exp3=f(r.get("opp_exp3"), 3),
+                              p3=f(r.get("p3"), 3), p3a=f(r.get("p3a"), 3), porb=f(r.get("porb"), 3), threes_pg=f(r.get("3pg"), 1),
                               species=c.get("sp", "Blob"), critter=c or None, apex=apx.get(tid))
         for tid, info in D1_INFO.items():
             if tid not in teams:

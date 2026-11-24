@@ -79,6 +79,9 @@ const PILOPT = [["Any"], ["Positive", (t, i) => t.pil[i] > 0], ["Negative", (t, 
                 ["Steady positive", (t, i) => t.pil[i] > 0 && t.st[i] >= 0.5], ["Steady negative", (t, i) => t.pil[i] < 0 && t.st[i] <= 0.5],
                 ["Streaky (either sign)", (t, i) => t.st[i] != null && t.st[i] < 0.5 && t.pil[i] > 0 || t.st[i] > 0.5 && t.pil[i] < 0]];
 const TRAITOPT = [["Any"], ["Apex level", (t, i) => t.ta[i]], ["Above average", (t, i) => t.tp[i] >= 0.5], ["Below average", (t, i) => t.tp[i] != null && t.tp[i] < 0.5], ["Not apex", (t, i) => !t.ta[i]]];
+const aUp = t => t.tp ? t.tp.filter(x => x != null && x >= 0.5).length : -1;
+const aDn = t => t.tp ? t.tp.filter(x => x != null && x < 0.5).length : -1;
+const traitEdges = g => g.F.tp && g.U.tp ? g.F.tp.filter((x, i) => x != null && g.U.tp[i] != null && x >= 0.5 && g.U.tp[i] < 0.5).length : -1;
 let SIDE = [];
 function buildFields(){
   SIDE = [
@@ -91,6 +94,11 @@ function buildFields(){
     ["sdn", "Steady − pillars", [["Any"], ["2 or more", t => steadyDn(t) >= 2], ["3 or more", t => steadyDn(t) >= 3], ["4 of 4", t => steadyDn(t) >= 4], ["None", t => steadyDn(t) === 0]]],
     ["rank", "Predator rank", [["Any"], ["Top 25", t => t.rank <= 25], ["Top 50", t => t.rank <= 50], ["Top 100", t => t.rank <= 100], ["Outside top 100", t => t.rank > 100], ["Bottom 100", t => t.rank > t.of - 100]]],
     ["acore", "Apex count", [["Any"], ["2 or more", t => t.acore >= 2], ["3 or more", t => t.acore >= 3], ["4 or more", t => t.acore >= 4], ["None", t => t.acore === 0]]],
+    ["aup", "Apex traits above average", [["Any"], ["2 or more", t => aUp(t) >= 2], ["3 or more", t => aUp(t) >= 3], ["4 or more", t => aUp(t) >= 4], ["5 or more", t => aUp(t) >= 5], ["All 6", t => aUp(t) >= 6], ["None", t => aUp(t) === 0]]],
+    ["adn", "Apex traits below average", [["Any"], ["2 or more", t => aDn(t) >= 2], ["3 or more", t => aDn(t) >= 3], ["4 or more", t => aDn(t) >= 4], ["5 or more", t => aDn(t) >= 5], ["All 6", t => aDn(t) >= 6], ["None", t => aDn(t) === 0]]],
+    ["orb", "ORBTV (extra possessions)", [["Any"], ["Above average", t => t.porb >= 0.5], ["Below average", t => t.porb != null && t.porb < 0.5], ["Top 30%", t => t.porb >= 0.7], ["Bottom 30%", t => t.porb != null && t.porb <= 0.3], ["Positive", t => t.orb > 0], ["Negative", t => t.orb != null && t.orb < 0]]],
+    ["p3", "3P%", [["Any"], ["Top 30%", t => t.p3 >= 0.7], ["Above average", t => t.p3 >= 0.5], ["Below average", t => t.p3 != null && t.p3 < 0.5], ["Not top 30%", t => t.p3 != null && t.p3 < 0.7]]],
+    ["p3a", "Threes tried per game", [["Any"], ["Above average (top third)", t => t.p3a >= 2 / 3], ["Average (middle third)", t => t.p3a != null && t.p3a >= 1 / 3 && t.p3a < 2 / 3], ["Below average (bottom third)", t => t.p3a != null && t.p3a < 1 / 3]]],
     ["shoot", "Shooting (eFG)", [["Any"], ["Hot (z +1 or more)", t => t.efg >= 1], ["Cold (z −1 or less)", t => t.efg != null && t.efg <= -1], ["Normal", t => t.efg != null && Math.abs(t.efg) < 1]]],
     ["three", "Three-point luck", [["Any"], ["Cold: 6+ under its level", t => t.own3a >= 60 && t.own3 <= t.exp3 - 0.06], ["Hot: 6+ over its level", t => t.own3a >= 60 && t.own3 >= t.exp3 + 0.06]]],
     ["dluck", "Defense luck", [["Any"], ["Lucky: opponents 6+ under", t => t.opp3a >= 60 && t.opp3 <= t.oexp3 - 0.06], ["Unlucky: opponents 6+ over", t => t.opp3a >= 60 && t.opp3 >= t.oexp3 + 0.06]]],
@@ -117,6 +125,7 @@ const GAME = [
   ["site", "Site", [["Any"], ["Favorite at home", g => g.site === "home"], ["Favorite on the road", g => g.site === "away"], ["Neutral", g => g.site === "neutral"], ["Skip neutral", g => g.site !== "neutral"]]],
   ["tier", "Pillar edges (fav)", [["Any"], ["0", g => tierOf(g) === 0], ["1 or more", g => tierOf(g) >= 1], ["2 or more", g => tierOf(g) >= 2], ["3 or more", g => tierOf(g) >= 3]]],
   ["dedge", "Dog pillar edges", [["Any"], ["0", g => dogEdges(g) === 0], ["1 or more", g => dogEdges(g) >= 1], ["2 or more", g => dogEdges(g) >= 2]]],
+  ["tedge", "Trait edges (fav above, dog below)", [["Any"], ["2 or more", g => traitEdges(g) >= 2], ["3 or more", g => traitEdges(g) >= 3], ["4 or more", g => traitEdges(g) >= 4], ["5 or more", g => traitEdges(g) >= 5], ["All 6", g => traitEdges(g) >= 6], ["None", g => traitEdges(g) === 0]]],
   ["flag", "Flag", [["Any"], ...Object.entries(FLAGS)]],
   ["month", "Month", [["Any"], ["December", g => g.d.slice(5, 7) === "12"], ["January", g => g.d.slice(5, 7) === "01"], ["February", g => g.d.slice(5, 7) === "02"], ["March and April", g => ["03", "04"].includes(g.d.slice(5, 7))]]],
 ];
